@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Gorditos Swing</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<style>
+body {
+    font-family: 'Poppins', sans-serif;
+    background: #0f0f0f;
+    margin: 0;
+    color: white;
+}
+
+header {
+    text-align: center;
+    padding: 20px;
+    background: #8b1e1e;
+    border-bottom: 5px solid #ffcc00;
+}
+
+header img {
+    width: 120px;
+    border-radius: 50%;
+}
+
+.container {
+    max-width: 1000px;
+    margin: auto;
+    padding: 20px;
+}
+
+.card {
+    background: #1c1c1c;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+}
+
+input, select {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 8px;
+    border: none;
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    background: #ffcc00;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background: #8b1e1e;
+    padding: 10px;
+}
+
+td {
+    padding: 10px;
+    text-align: center;
+}
+
+tr:nth-child(even) {
+    background: #2a2a2a;
+}
+
+.delete {
+    background: red;
+    color: white;
+}
+
+.resumen {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+}
+
+.resumen div {
+    background: #111;
+    padding: 15px;
+    border-radius: 10px;
+    width: 30%;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<img src="logo.png">
+<h1>Gorditos Swing</h1>
+</header>
+
+<div class="container">
+
+<div class="card">
+<h3>Agregar movimiento</h3>
+
+<input type="date" id="fecha">
+<select id="tipo">
+<option value="Ingreso">Ingreso</option>
+<option value="Egreso">Egreso</option>
+</select>
+
+<input type="text" id="categoria" placeholder="Categoría">
+<input type="text" id="descripcion" placeholder="Descripción">
+<input type="number" id="monto" placeholder="Monto">
+
+<input type="file" id="archivo">
+
+<button onclick="agregar()">Agregar</button>
+</div>
+
+<div class="card">
+<h3>Filtrar por mes</h3>
+<input type="month" id="filtroMes" onchange="mostrar()">
+</div>
+
+<div class="card">
+<table>
+<thead>
+<tr>
+<th>Fecha</th>
+<th>Tipo</th>
+<th>Categoría</th>
+<th>Descripción</th>
+<th>Monto</th>
+<th>📎</th>
+<th>🗑️</th>
+</tr>
+</thead>
+<tbody id="tabla"></tbody>
+</table>
+</div>
+
+<div class="card resumen">
+<div>
+<h3>Ingresos</h3>
+<p id="ingresos">$0</p>
+</div>
+
+<div>
+<h3>Egresos</h3>
+<p id="egresos">$0</p>
+</div>
+
+<div>
+<h3>Ganancia</h3>
+<p id="ganancia">$0</p>
+</div>
+</div>
+
+<div class="card">
+<button onclick="exportar()">Exportar a Excel</button>
+</div>
+
+</div>
+
+<script>
+let datos = JSON.parse(localStorage.getItem("gorditosSwing")) || [];
+
+function guardar() {
+    localStorage.setItem("gorditosSwing", JSON.stringify(datos));
+}
+
+function agregar() {
+    let fecha = document.getElementById("fecha").value;
+    let tipo = document.getElementById("tipo").value;
+    let categoria = document.getElementById("categoria").value;
+    let descripcion = document.getElementById("descripcion").value;
+    let monto = parseFloat(document.getElementById("monto").value);
+
+    let archivoInput = document.getElementById("archivo").files[0];
+    let archivoURL = archivoInput ? URL.createObjectURL(archivoInput) : "";
+
+    if (!fecha || !monto) return alert("Faltan datos");
+
+    datos.push({fecha, tipo, categoria, descripcion, monto, archivo: archivoURL});
+    guardar();
+    limpiar();
+    mostrar();
+}
+
+function limpiar() {
+    document.getElementById("categoria").value="";
+    document.getElementById("descripcion").value="";
+    document.getElementById("monto").value="";
+    document.getElementById("archivo").value="";
+}
+
+function eliminar(i) {
+    datos.splice(i,1);
+    guardar();
+    mostrar();
+}
+
+function mostrar() {
+    let tabla = document.getElementById("tabla");
+    tabla.innerHTML = "";
+
+    let filtro = document.getElementById("filtroMes").value;
+
+    let ingresos = 0;
+    let egresos = 0;
+
+    let filtrados = datos.filter(d => {
+        if (!filtro) return true;
+        return d.fecha.startsWith(filtro);
+    });
+
+    filtrados.forEach((d,i)=>{
+        let fila = `<tr>
+        <td>${d.fecha}</td>
+        <td>${d.tipo}</td>
+        <td>${d.categoria}</td>
+        <td>${d.descripcion}</td>
+        <td>$${d.monto.toFixed(2)}</td>
+        <td>${d.archivo ? `<a href="${d.archivo}" target="_blank">Ver</a>` : ""}</td>
+        <td><button class="delete" onclick="eliminar(${i})">🗑️</button></td>
+        </tr>`;
+
+        tabla.innerHTML += fila;
+
+        if (d.tipo==="Ingreso") ingresos += d.monto;
+        else egresos += d.monto;
+    });
+
+    document.getElementById("ingresos").innerText = "$" + ingresos.toFixed(2);
+    document.getElementById("egresos").innerText = "$" + egresos.toFixed(2);
+    document.getElementById("ganancia").innerText = "$" + (ingresos-egresos).toFixed(2);
+}
+
+function exportar() {
+    let filtro = document.getElementById("filtroMes").value;
+
+    let datosExcel = datos.filter(d => {
+        if (!filtro) return true;
+        return d.fecha.startsWith(filtro);
+    });
+
+    let hoja = XLSX.utils.json_to_sheet(datosExcel);
+    let libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, "Reporte");
+
+    XLSX.writeFile(libro, "Gorditos_Swing.xlsx");
+}
+
+mostrar();
+</script>
+
+</body>
+</html>

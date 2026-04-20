@@ -5,66 +5,95 @@
 <title>Gorditos Swing</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <style>
 body {
     font-family: 'Poppins', sans-serif;
-    background: #0f0f0f;
+    background: #121212;
     margin: 0;
     color: white;
 }
 
+/* HEADER */
 header {
     text-align: center;
-    padding: 20px;
-    background: #8b1e1e;
-    border-bottom: 5px solid #ffcc00;
+    padding: 25px 15px;
+    background: #7a0f14; /* rojo más suave */
+    border-bottom: 3px solid #f5c518;
 }
 
 header img {
-    width: 120px;
+    width: 110px;
     border-radius: 50%;
+    margin-bottom: 10px;
 }
 
+header h1 {
+    margin: 0;
+    font-size: 26px;
+    letter-spacing: 1px;
+}
+
+/* CONTENEDOR */
 .container {
-    max-width: 1000px;
+    max-width: 1100px;
     margin: auto;
     padding: 20px;
 }
 
+/* TARJETAS */
 .card {
-    background: #1c1c1c;
+    background: #1e1e1e;
     padding: 20px;
     border-radius: 15px;
     margin-bottom: 20px;
+    border: 1px solid #2c2c2c;
+}
+
+/* FORMULARIO */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
 }
 
 input, select {
-    padding: 10px;
-    margin: 5px;
+    padding: 12px;
     border-radius: 8px;
     border: none;
+    background: #2a2a2a;
+    color: white;
 }
 
+/* BOTONES */
 button {
-    padding: 10px 15px;
+    padding: 12px;
     border: none;
     border-radius: 8px;
-    background: #ffcc00;
+    background: #f5c518;
     color: black;
     font-weight: bold;
     cursor: pointer;
 }
 
+button:hover {
+    background: #ffd84d;
+}
+
+.delete {
+    background: #b02a2a;
+    color: white;
+}
+
+/* TABLA */
 table {
     width: 100%;
     border-collapse: collapse;
 }
 
 th {
-    background: #8b1e1e;
-    padding: 10px;
+    background: #7a0f14;
+    padding: 12px;
 }
 
 td {
@@ -73,41 +102,44 @@ td {
 }
 
 tr:nth-child(even) {
-    background: #2a2a2a;
+    background: #262626;
 }
 
-.delete {
-    background: red;
-    color: white;
-}
-
+/* RESUMEN */
 .resumen {
-    display: flex;
-    justify-content: space-around;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.box {
+    background: #181818;
+    padding: 20px;
+    border-radius: 12px;
     text-align: center;
 }
 
-.resumen div {
-    background: #111;
-    padding: 15px;
-    border-radius: 10px;
-    width: 30%;
-}
+.ing { border-left: 5px solid #4caf50; }
+.egr { border-left: 5px solid #e53935; }
+.gan { border-left: 5px solid #f5c518; }
+
 </style>
 </head>
 
 <body>
 
 <header>
-<img src="logo.png">
-<h1>Gorditos Swing</h1>
+    <img src="logo.png">
+    <h1>Gorditos Swing</h1>
 </header>
 
 <div class="container">
 
+<!-- FORMULARIO -->
 <div class="card">
 <h3>Agregar movimiento</h3>
 
+<div class="form-grid">
 <input type="date" id="fecha">
 <select id="tipo">
 <option value="Ingreso">Ingreso</option>
@@ -117,17 +149,17 @@ tr:nth-child(even) {
 <input type="text" id="categoria" placeholder="Categoría">
 <input type="text" id="descripcion" placeholder="Descripción">
 <input type="number" id="monto" placeholder="Monto">
-
-<input type="file" id="archivo">
-
 <button onclick="agregar()">Agregar</button>
 </div>
+</div>
 
+<!-- FILTRO -->
 <div class="card">
 <h3>Filtrar por mes</h3>
 <input type="month" id="filtroMes" onchange="mostrar()">
 </div>
 
+<!-- TABLA -->
 <div class="card">
 <table>
 <thead>
@@ -137,7 +169,6 @@ tr:nth-child(even) {
 <th>Categoría</th>
 <th>Descripción</th>
 <th>Monto</th>
-<th>📎</th>
 <th>🗑️</th>
 </tr>
 </thead>
@@ -145,24 +176,26 @@ tr:nth-child(even) {
 </table>
 </div>
 
-<div class="card resumen">
-<div>
+<!-- RESUMEN -->
+<div class="resumen">
+<div class="box ing">
 <h3>Ingresos</h3>
 <p id="ingresos">$0</p>
 </div>
 
-<div>
+<div class="box egr">
 <h3>Egresos</h3>
 <p id="egresos">$0</p>
 </div>
 
-<div>
+<div class="box gan">
 <h3>Ganancia</h3>
 <p id="ganancia">$0</p>
 </div>
 </div>
 
-<div class="card">
+<!-- EXPORTAR -->
+<div class="card" style="text-align:center;">
 <button onclick="exportar()">Exportar a Excel</button>
 </div>
 
@@ -182,12 +215,9 @@ function agregar() {
     let descripcion = document.getElementById("descripcion").value;
     let monto = parseFloat(document.getElementById("monto").value);
 
-    let archivoInput = document.getElementById("archivo").files[0];
-    let archivoURL = archivoInput ? URL.createObjectURL(archivoInput) : "";
-
     if (!fecha || !monto) return alert("Faltan datos");
 
-    datos.push({fecha, tipo, categoria, descripcion, monto, archivo: archivoURL});
+    datos.push({fecha, tipo, categoria, descripcion, monto});
     guardar();
     limpiar();
     mostrar();
@@ -197,7 +227,6 @@ function limpiar() {
     document.getElementById("categoria").value="";
     document.getElementById("descripcion").value="";
     document.getElementById("monto").value="";
-    document.getElementById("archivo").value="";
 }
 
 function eliminar(i) {
@@ -215,19 +244,15 @@ function mostrar() {
     let ingresos = 0;
     let egresos = 0;
 
-    let filtrados = datos.filter(d => {
-        if (!filtro) return true;
-        return d.fecha.startsWith(filtro);
-    });
+    datos.forEach((d,i)=>{
+        if (filtro && !d.fecha.startsWith(filtro)) return;
 
-    filtrados.forEach((d,i)=>{
         let fila = `<tr>
         <td>${d.fecha}</td>
         <td>${d.tipo}</td>
         <td>${d.categoria}</td>
         <td>${d.descripcion}</td>
         <td>$${d.monto.toFixed(2)}</td>
-        <td>${d.archivo ? `<a href="${d.archivo}" target="_blank">Ver</a>` : ""}</td>
         <td><button class="delete" onclick="eliminar(${i})">🗑️</button></td>
         </tr>`;
 
@@ -243,18 +268,16 @@ function mostrar() {
 }
 
 function exportar() {
-    let filtro = document.getElementById("filtroMes").value;
-
-    let datosExcel = datos.filter(d => {
-        if (!filtro) return true;
-        return d.fecha.startsWith(filtro);
+    let csv = "Fecha,Tipo,Categoria,Descripcion,Monto\n";
+    datos.forEach(d=>{
+        csv += `${d.fecha},${d.tipo},${d.categoria},${d.descripcion},${d.monto}\n`;
     });
 
-    let hoja = XLSX.utils.json_to_sheet(datosExcel);
-    let libro = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(libro, hoja, "Reporte");
-
-    XLSX.writeFile(libro, "Gorditos_Swing.xlsx");
+    let blob = new Blob([csv], {type:"text/csv"});
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "gorditos_swing.csv";
+    a.click();
 }
 
 mostrar();
